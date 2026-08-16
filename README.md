@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cartr Web — Merchant Dashboard
 
-## Getting Started
+Next.js (App Router) frontend for [`cartr-api`](../cartr-api), replacing the static
+HTML/CSS/JS prototype that used to live in `/home/kisameholmes/code/cartr`. That prototype
+remains as a design/UX reference only — nothing here talks to it, and nothing there gets touched
+by this project.
 
-First, run the development server:
+**Phase 1 scope (current)**: the merchant dashboard only. Public storefront and admin panel are
+later phases — see `.claude/plans/mighty-mixing-fountain.md` for the full roadmap this was built
+against.
+
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+cp .env.local.example .env.local   # point CARTR_API_URL at your local cartr-api
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Requires a running `cartr-api` (see that repo's own README). Since `cartr-api` has no merchant
+signup flow yet, seed one for local dev:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+cd ../cartr-api
+MERCHANT_SEED_EMAIL=dev@cartr.ng \
+MERCHANT_SEED_PASSWORD=devpassword123 \
+MERCHANT_SEED_SLUG=dev-store \
+MERCHANT_SEED_STORE_NAME="Dev Store" \
+pnpm seed:merchant
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Then log in at `http://localhost:3000/login` with those credentials.
 
-## Learn More
+## Architecture
 
-To learn more about Next.js, take a look at the following resources:
+- **Auth**: access (15m) + refresh (7d) tokens from `cartr-api`, stored as httpOnly cookies —
+  never exposed to client-side JS. Set by `app/api/auth/{login,logout}/route.ts`, which proxy the
+  corresponding `cartr-api` endpoints.
+- **Route guard + silent refresh**: `proxy.ts` (Next.js 16's replacement for the `middleware.ts`
+  convention) runs before every `/dashboard/*` request, checks whether the access token is fresh
+  enough, and — if not — refreshes proactively using the refresh-token cookie before the request
+  reaches any page. This is deliberate, not incidental: Server Components can read cookies but
+  can't set them mid-render, so a reactive "refresh on 401 during a data fetch" approach has
+  nowhere to persist the new token. Doing it in `proxy.ts` (which runs pre-render and can set
+  response cookies) is the only place a refresh can both happen and stick.
+- **API client**: `lib/api-client.ts` (low-level, envelope-aware, typed `ApiError` keyed on
+  `cartr-api`'s domain error codes) and `lib/api-server.ts` (the authenticated wrapper Server
+  Components actually call, pulling the access token from cookies).
+- **Design tokens**: `app/globals.css` ports the color/spacing/radius tokens from the old static
+  prototype's `assets/css/styles.css` into a Tailwind v4 `@theme` block, so the rebuild doesn't
+  reinvent the visual language from scratch.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Not yet built
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Everything past the dashboard shell + home page (products, orders, settings — including the new
+theme picker and custom domain setup, subscription) — home page (login → real dashboard data) is
+the first verified slice; the rest of Phase 1 follows the same established pattern
+(`apiGet`/`apiMutate` + a page). Public storefront and admin panel are separate, later phases.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Real merchant self-signup remains a `cartr-api` gap, not something this project solves —
+`pnpm seed:merchant` there is a dev-only stand-in.
