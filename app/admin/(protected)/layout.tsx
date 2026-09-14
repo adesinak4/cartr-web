@@ -1,25 +1,49 @@
 import Link from "next/link";
 import { LogoutButton } from "@/app/dashboard/logout-button";
-import { IconBox, IconChartBar } from "@/components/icons";
+import { getSessionRole } from "@/lib/session";
+import {
+  IconBox,
+  IconChartBar,
+  IconMoney,
+  IconGlobe,
+  IconReceipt,
+  IconCard,
+  IconFlag,
+  IconUsers,
+  IconSliders,
+  IconClock,
+} from "@/components/icons";
 
 const NAV_LINKS = [
   { href: "/admin/overview", label: "Overview", icon: IconChartBar },
   { href: "/admin/merchants", label: "Merchants", icon: IconBox },
+  { href: "/admin/plans", label: "Plans & fees", icon: IconMoney },
+  { href: "/admin/domain-provisioning", label: "Domain queue", icon: IconGlobe },
+  { href: "/admin/orders", label: "Orders", icon: IconReceipt },
+  { href: "/admin/transactions", label: "Transactions", icon: IconCard },
+  { href: "/admin/disputes", label: "Disputes", icon: IconFlag },
+  // Admin-only — hidden entirely from a 'support' viewer, not just disabled.
+  { href: "/admin/users", label: "Admin users", icon: IconUsers, adminOnly: true },
+  { href: "/admin/settings", label: "Settings", icon: IconSliders, adminOnly: true },
+  { href: "/admin/audit-log", label: "Audit log", icon: IconClock },
 ];
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const role = await getSessionRole();
+  const links = NAV_LINKS.filter((link) => !link.adminOnly || role === "admin");
+
   return (
     <div className="flex min-h-screen">
-      <aside className="flex w-64 flex-col justify-between bg-blue p-4">
+      <aside className="flex w-64 shrink-0 flex-col justify-between overflow-y-auto bg-blue p-4">
         <div>
           <div className="mb-6 flex items-center gap-2 px-1">
             <span className="text-lg font-semibold text-white">Cartr</span>
             <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-white">
-              ADMIN
+              {role === "support" ? "SUPPORT" : "ADMIN"}
             </span>
           </div>
           <nav className="flex flex-col gap-1">
-            {NAV_LINKS.map((link) => (
+            {links.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -32,14 +56,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </nav>
         </div>
         <div className="border-t border-white/15 pt-4">
-          <p className="mb-2 px-1 text-xs text-white/60">Platform Admin</p>
+          <p className="mb-2 px-1 text-xs text-white/60">
+            {role === "support" ? "Support" : "Platform Admin"}
+          </p>
           <LogoutButton
             redirectTo="/admin/login"
             className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm text-white/80 transition hover:bg-white/10 disabled:opacity-60"
           />
         </div>
       </aside>
-      <main className="flex-1 bg-grey-100">{children}</main>
+      <main className="flex-1 overflow-x-auto bg-grey-100">{children}</main>
     </div>
   );
 }

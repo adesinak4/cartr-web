@@ -27,7 +27,7 @@ export async function apiGet<T>(path: string): Promise<T> {
 
 export async function apiMutate<T>(
   path: string,
-  method: "POST" | "PATCH" | "DELETE",
+  method: "POST" | "PATCH" | "PUT" | "DELETE",
   body?: unknown,
 ): Promise<T> {
   const accessToken = await getAccessToken();

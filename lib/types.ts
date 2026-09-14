@@ -194,3 +194,158 @@ export interface AdminMerchant {
   planId: string | null;
   createdAt: string;
 }
+// Admin dashboard — platform operations.
+
+export type AppRole = "owner" | "staff" | "admin" | "support";
+
+export interface AuditLog {
+  id: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  actorId: string | null;
+  actorRole: string | null;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+}
+
+export interface PlatformUser {
+  id: string;
+  tenantId: string | null;
+  email: string;
+  phone: string | null;
+  name: string;
+  role: AppRole;
+  status: "active" | "invited" | "disabled";
+  createdAt: string;
+}
+
+export interface DomainProvisioningTask {
+  id: string;
+  merchantId: string;
+  desiredDomain: string;
+  status: "pending" | "done";
+  createdAt: string;
+  doneAt: string | null;
+  merchantSlug: string;
+  merchantStoreName: string;
+}
+
+export interface AdminOrder {
+  id: string;
+  tenantId: string;
+  customerId: string;
+  status: OrderStatus;
+  subtotal: string;
+  deliveryFee: string;
+  total: string;
+  currency: string;
+  deliveryStreet: string;
+  deliveryCity: string;
+  deliveryState: string;
+  note: string | null;
+  createdAt: string;
+  updatedAt: string;
+  merchantSlug: string;
+  merchantStoreName: string;
+}
+
+/** GET /admin/orders/:id — no merchant join, unlike the list shape (AdminOrder). */
+export interface AdminOrderDetail {
+  id: string;
+  tenantId: string;
+  customerId: string;
+  status: OrderStatus;
+  subtotal: string;
+  deliveryFee: string;
+  total: string;
+  currency: string;
+  deliveryStreet: string;
+  deliveryCity: string;
+  deliveryState: string;
+  note: string | null;
+  createdAt: string;
+  updatedAt: string;
+  items: OrderItem[];
+}
+
+export type TransactionStatus = "pending" | "success" | "failed" | "refunded";
+
+export interface AdminTransaction {
+  id: string;
+  orderId: string;
+  tenantId: string;
+  provider: string;
+  providerReference: string;
+  amount: string;
+  platformFee: string;
+  merchantAmount: string;
+  status: TransactionStatus;
+  flutterwaveTransactionId: string | null;
+  refundedAt: string | null;
+  refundReference: string | null;
+  refundInitiatedBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+  merchantSlug: string;
+  merchantStoreName: string;
+}
+
+export interface Dispute {
+  id: string;
+  orderId: string;
+  tenantId: string;
+  reason: string;
+  status: "open" | "resolved";
+  resolutionNotes: string | null;
+  createdBy: string;
+  resolvedBy: string | null;
+  createdAt: string;
+  resolvedAt: string | null;
+  merchantSlug?: string;
+  merchantStoreName?: string;
+}
+
+export interface PlatformSetting {
+  key: string;
+  value: string;
+  description: string | null;
+  updatedBy: string | null;
+  updatedAt: string;
+}
+
+export interface SubscriptionCharge {
+  id: string;
+  tenantId: string;
+  planId: string;
+  paymentMethodId: string | null;
+  provider: string;
+  providerReference: string;
+  amount: string;
+  currency: string;
+  status: "pending" | "success" | "failed";
+  attemptNumber: number;
+  billingPeriodStart: string | null;
+  billingPeriodEnd: string | null;
+  failureReason: string | null;
+  createdAt: string;
+}
+
+export interface AdminStatsOverview {
+  merchants: {
+    total: number;
+    active: number;
+    suspended: number;
+    bySubscriptionStatus: Record<string, number>;
+    newInLast7Days: number;
+  };
+  revenue: {
+    estimatedMrr: number;
+    totalSubscriptionRevenueCollected: number;
+    totalPlatformFeeRevenue: number;
+  };
+  operations: {
+    pastDueMerchants: number;
+    pendingDomainProvisioningTasks: number;
+  };
+}

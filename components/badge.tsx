@@ -11,6 +11,13 @@ const STYLES: Record<string, string> = {
   past_due: "bg-warning-light text-warning",
   draft: "bg-grey-100 text-grey-500",
   archived: "bg-grey-100 text-grey-400",
+  open: "bg-warning-light text-warning",
+  resolved: "bg-success-light text-success",
+  done: "bg-success-light text-success",
+  success: "bg-success-light text-success",
+  failed: "bg-error-light text-error",
+  disabled: "bg-grey-100 text-grey-500",
+  invited: "bg-blue-light text-blue",
 };
 
 export function Badge({ status, label }: { status: string; label?: string }) {

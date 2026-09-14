@@ -200,8 +200,23 @@ export const IconChevronRight = (p: IconProps) => (
     <path d="M9 6l6 6-6 6" />
   </svg>
 );
-export const IconStar = (p: IconProps) => (
-  <svg {...base(p)} fill="currentColor" stroke="none">
-    <path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 17.8l-6.2 3.3 1.2-6.9-5-4.9 6.9-1z" />
+export const IconUsers = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M23 21v-2a4 4 0 00-3-3.87" />
+    <path d="M16 3.13a4 4 0 010 7.75" />
+  </svg>
+);
+export const IconFlag = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+    <path d="M4 22V3" />
+  </svg>
+);
+export const IconSliders = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3" />
+    <path d="M1 14h6M9 8h6M17 16h6" />
   </svg>
 );
