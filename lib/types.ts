@@ -99,12 +99,30 @@ export interface Theme {
   isPremium: boolean;
 }
 
+export type BillingPeriodMonths = 3 | 6 | 12;
+
+export interface PlanPrice {
+  id: string;
+  planId: string;
+  periodMonths: BillingPeriodMonths;
+  totalPrice: string;
+}
+
 export interface Plan {
   id: string;
   name: string;
   monthlyPrice: string;
   transactionFeePercent: string;
   features: string[];
+  archivedAt?: string | null;
+  // GET /plans is public and always includes period pricing — the onboarding
+  // wizard and the dashboard plan picker both need it.
+  prices: PlanPrice[];
+}
+
+export interface AdminPlanWithPrices extends Plan {
+  archivedAt: string | null;
+  prices: PlanPrice[];
 }
 
 // Public storefront — deliberately hand-picked shapes, matching what
@@ -134,6 +152,35 @@ export interface PublicProduct {
 }
 
 // Admin — full Merchant row (AdminService returns raw rows, no shaping).
+
+export interface Bank {
+  code: string;
+  name: string;
+}
+
+export interface PaymentAccount {
+  id: string;
+  bankName: string;
+  bankCode: string;
+  accountNumber: string;
+  accountName: string;
+  kycStatus: string;
+  verifiedAt: string | null;
+}
+
+// Onboarding wizard — public, pre-account.
+
+export interface DomainCheckResult {
+  domain: string;
+  // null = the availability registry couldn't be reached (RDAP timeout/
+  // unreachable) — a real, honest third state, never coerced to true/false.
+  available: boolean | null;
+}
+
+export interface OnboardingStatus {
+  status: "pending" | "completed" | "failed";
+  slug: string | null;
+}
 
 export interface AdminMerchant {
   id: string;

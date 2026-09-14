@@ -4,6 +4,11 @@ import { useState, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { IconEye, IconEyeOff, IconMail, IconLock } from "@/components/icons";
+import {
+  GoogleSignInButton,
+  GoogleProfile,
+  GOOGLE_SIGNIN_ENABLED,
+} from "@/components/google-sign-in-button";
 
 export function LoginForm() {
   const router = useRouter();
@@ -13,6 +18,12 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  function goToDestination() {
+    const redirectTo = searchParams.get("redirectTo") ?? "/dashboard";
+    router.push(redirectTo);
+    router.refresh();
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -31,9 +42,7 @@ export function LoginForm() {
         throw new Error(body?.message ?? "Login failed");
       }
 
-      const redirectTo = searchParams.get("redirectTo") ?? "/dashboard";
-      router.push(redirectTo);
-      router.refresh();
+      goToDestination();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -41,8 +50,41 @@ export function LoginForm() {
     }
   }
 
+  async function onGoogleSuccess(profile: GoogleProfile) {
+    setError(null);
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken: profile.idToken }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.message ?? "Google sign-in failed");
+      }
+
+      goToDestination();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Google sign-in failed");
+      setLoading(false);
+    }
+  }
+
   return (
     <form onSubmit={onSubmit} className="flex w-full flex-col gap-4">
+      {GOOGLE_SIGNIN_ENABLED && (
+        <>
+          <GoogleSignInButton onSuccess={onGoogleSuccess} />
+          <div className="flex items-center gap-3 text-xs text-grey-400">
+            <div className="h-px flex-1 bg-grey-200" />
+            or
+            <div className="h-px flex-1 bg-grey-200" />
+          </div>
+        </>
+      )}
       <div>
         <label htmlFor="email" className="mb-1 block text-sm text-grey-500">
           Email

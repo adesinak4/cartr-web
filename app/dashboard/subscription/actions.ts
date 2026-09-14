@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { apiMutate } from "@/lib/api-server";
 import { ApiError } from "@/lib/api-client";
+import { env } from "@/lib/env";
 
 export interface SubscriptionActionState {
   error: string | null;
@@ -14,7 +15,7 @@ const initialState: SubscriptionActionState = { error: null };
 
 export async function startCheckout(): Promise<SubscriptionActionState> {
   const requestHeaders = await headers();
-  const origin = requestHeaders.get("origin") ?? "http://localhost:3000";
+  const origin = requestHeaders.get("origin") ?? env.NEXT_PUBLIC_APP_URL;
   const redirectUrl = `${origin}/dashboard/subscription/callback`;
 
   let paymentLink: string;

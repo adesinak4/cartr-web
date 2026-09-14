@@ -49,7 +49,7 @@ export default function LoginPage() {
           <p className="mt-6 border-t border-grey-200 pt-6 text-center text-sm text-grey-500">
             Don&apos;t have an account?{" "}
             <Link href="/signup" className="font-medium text-blue hover:underline">
-              Create a free store
+              Create your store
             </Link>
           </p>
         </div>

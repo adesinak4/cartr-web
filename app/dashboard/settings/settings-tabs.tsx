@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Merchant, Theme } from "@/lib/types";
+import { Merchant, Theme, PaymentAccount, Bank } from "@/lib/types";
 import { StoreInfoForm } from "./store-info-form";
 import { ThemePicker } from "./theme-picker";
 import { CustomDomainSection } from "./custom-domain-section";
@@ -15,9 +15,13 @@ type Tab = (typeof TABS)[number];
 export function SettingsTabs({
   merchant,
   themes,
+  paymentAccount,
+  banks,
 }: {
   merchant: Merchant;
   themes: Theme[];
+  paymentAccount: PaymentAccount | null;
+  banks: Bank[];
 }) {
   const [tab, setTab] = useState<Tab>("General");
 
@@ -61,7 +65,7 @@ export function SettingsTabs({
       {tab === "Payment" && (
         <section className="max-w-lg rounded-lg bg-white p-6 shadow-card">
           <h2 className="mb-4 text-sm font-medium text-grey-500">Payment settings</h2>
-          <PaymentSection merchant={merchant} />
+          <PaymentSection merchant={merchant} paymentAccount={paymentAccount} banks={banks} />
         </section>
       )}
 

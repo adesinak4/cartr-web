@@ -3,7 +3,6 @@ import { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE } from "@/lib/cookies";
 import { getJwtExpiry, getJwtRole } from "@/lib/jwt";
 import { setAuthCookies, clearAuthCookies } from "@/lib/auth-cookies";
 import { apiRequest, ApiError } from "@/lib/api-client";
-import { extractSubdomainSlug } from "@/lib/tenant-host";
 import { env } from "@/lib/env";
 
 const REFRESH_MARGIN_SECONDS = 60;
@@ -18,8 +17,11 @@ interface RefreshData {
  *  1. /dashboard/* — any authenticated user, with proactive silent refresh.
  *  2. /admin/* (except /admin/login) — same, but additionally requires
  *     role === 'admin'.
- *  3. Everything else — host-based tenant resolution for the storefront,
- *     rewriting a subdomain/custom-domain request to /s/{slug}{path}.
+ *  3. Everything else — host-based tenant resolution for the storefront.
+ *     Every merchant storefront is a fully standalone custom domain (Cartr
+ *     provisions it via Truehost on payment — there is no
+ *     {slug}.{PLATFORM_DOMAIN} subdomain scheme), resolved via
+ *     GET /merchants/public/resolve-domain and rewritten to /s/{slug}{path}.
  *
  * Refreshing here (rather than reactively on a 401 during a Server
  * Component render) sidesteps a real Next.js constraint: Server Components
@@ -114,28 +116,25 @@ async function tenantHostRewrite(req: NextRequest): Promise<NextResponse> {
   const host = req.headers.get("host") ?? "";
   const hostname = host.split(":")[0];
 
-  // The platform's own bare domain / localhost — never a tenant, render normally.
+  // The app's own hostname (app.cartr.com.ng in production) / localhost —
+  // never a merchant, render normally.
   if (hostname === env.PLATFORM_DOMAIN.split(":")[0] || hostname === "localhost") {
     return NextResponse.next();
   }
 
-  let slug = extractSubdomainSlug(host, env.PLATFORM_DOMAIN);
-
-  if (!slug) {
-    try {
-      const result = await apiRequest<{ slug: string }>(
-        `/merchants/public/resolve-domain?domain=${encodeURIComponent(hostname)}`,
-      );
-      slug = result.slug;
-    } catch {
-      // Unknown host — let it fall through to normal routing (404s naturally).
-      return NextResponse.next();
-    }
+  // Every merchant storefront is a standalone custom domain — resolve it
+  // directly, no subdomain shortcut to try first.
+  try {
+    const result = await apiRequest<{ slug: string }>(
+      `/merchants/public/resolve-domain?domain=${encodeURIComponent(hostname)}`,
+    );
+    const url = req.nextUrl.clone();
+    url.pathname = `/s/${result.slug}${req.nextUrl.pathname}`;
+    return NextResponse.rewrite(url);
+  } catch {
+    // Unknown host — let it fall through to normal routing (404s naturally).
+    return NextResponse.next();
   }
-
-  const url = req.nextUrl.clone();
-  url.pathname = `/s/${slug}${req.nextUrl.pathname}`;
-  return NextResponse.rewrite(url);
 }
 
 export const config = {

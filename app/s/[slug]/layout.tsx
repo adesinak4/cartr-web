@@ -106,7 +106,7 @@ export default async function StorefrontLayout({
       <div className="border-t border-grey-200 bg-grey-100 px-6 py-4 text-center text-xs text-grey-500">
         Powered by <span className="font-medium text-blue">Cartr</span> ·{" "}
         <Link href="/" className="text-blue hover:underline">
-          Create your free store →
+          Create your own store →
         </Link>
       </div>
       <footer className="bg-dark px-6 py-6 text-center text-xs text-white/60">

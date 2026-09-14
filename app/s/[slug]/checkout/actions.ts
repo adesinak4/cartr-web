@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { apiPublicPost } from "@/lib/api-public";
 import { ApiError } from "@/lib/api-client";
 import { CartItem } from "@/lib/cart";
+import { env } from "@/lib/env";
 
 export interface CheckoutState {
   error: string | null;
@@ -21,7 +22,7 @@ export async function submitCheckout(
   }
 
   const requestHeaders = await headers();
-  const origin = requestHeaders.get("origin") ?? "http://localhost:3000";
+  const origin = requestHeaders.get("origin") ?? env.NEXT_PUBLIC_APP_URL;
 
   const firstName = String(formData.get("firstName") ?? "").trim();
   const lastName = String(formData.get("lastName") ?? "").trim();
